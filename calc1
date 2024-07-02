@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV Charging Calculator</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+        }
+        .calculator {
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
+        }
+        .calculator h1 {
+            text-align: center;
+        }
+        .calculator input {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 5px 0;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .calculator button {
+            width: 100%;
+            padding: 10px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #ff8c00;
+            color: #fff;
+            transition: background-color 0.3s;
+        }
+        .calculator button:hover {
+            background-color: #ff6500;
+        }
+        .result {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <h1>EV Charging Calculator</h1>
+        <input type="number" id="numCars" placeholder="Total # of cars charging per day" required>
+        <input type="number" id="avgCapacity" placeholder="Average Capacity of EVs (kW/Hr)" required>
+        <input type="number" id="stationCapacity" placeholder="Capacity of Charging Station (kW)" required>
+        <input type="number" id="offPeakHours" placeholder="# of Off Peak Charging Hours" required>
+        <input type="number" id="elecCost" placeholder="Cost of Electricity ($/kWh)" required>
+        <input type="number" id="facilityCharge" placeholder="Facility Charge per Month ($)" required>
+        <input type="number" id="demandCharge" placeholder="Demand Charge per kW ($)" required>
+        <button onclick="calculateEnergy()">Calculate</button>
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        function calculateEnergy() {
+            const numCars = parseFloat(document.getElementById('numCars').value);
+            const avgCapacity = parseFloat(document.getElementById('avgCapacity').value);
+            const stationCapacity = parseFloat(document.getElementById('stationCapacity').value);
+            const offPeakHours = parseFloat(document.getElementById('offPeakHours').value);
+            const elecCost = parseFloat(document.getElementById('elecCost').value);
+            const facilityCharge = parseFloat(document.getElementById('facilityCharge').value);
+            const demandCharge = parseFloat(document.getElementById('demandCharge').value);
+
+            if(numCars && avgCapacity && stationCapacity && offPeakHours && elecCost && facilityCharge && demandCharge) {
+                const totalEnergyPerDay = numCars * avgCapacity;
+                const chargingWhenNeededPerDay = totalEnergyPerDay;
+                const chargingEveryDayPerDay = totalEnergyPerDay;
+                
+                const chargingWhenNeededPerWeek = chargingWhenNeededPerDay * 7;
+                const chargingEveryDayPerWeek = chargingEveryDayPerDay * 7;
+
+                const chargingWhenNeededPerMonth = chargingWhenNeededPerDay * 30;
+                const chargingEveryDayPerMonth = chargingEveryDayPerDay * 30;
+
+                const chargingWhenNeededPerYear = chargingWhenNeededPerDay * 365;
+                const chargingEveryDayPerYear = chargingEveryDayPerDay * 365;
+
+                const totalCostPerMonth = (chargingEveryDayPerMonth * elecCost) + facilityCharge + (stationCapacity * demandCharge * offPeakHours);
+                const totalCostPerYear = totalCostPerMonth * 12;
+
+                const resultText = `
+                    Total Energy Needed per Day: ${totalEnergyPerDay} kW<br>
+                    Charging When Needed per Day: ${chargingWhenNeededPerDay} kW<br>
+                    Charging Every Day per Day: ${chargingEveryDayPerDay} kW<br>
+                    Charging When Needed per Week: ${chargingWhenNeededPerWeek} kW<br>
+                    Charging Every Day per Week: ${chargingEveryDayPerWeek} kW<br>
+                    Charging When Needed per Month: ${chargingWhenNeededPerMonth} kW<br>
+                    Charging Every Day per Month: ${chargingEveryDayPerMonth} kW<br>
+                    Charging When Needed per Year: ${chargingWhenNeededPerYear} kW<br>
+                    Charging Every Day per Year: ${chargingEveryDayPerYear} kW<br>
+                    <br>
+                    Total Monthly Cost: $${totalCostPerMonth.toFixed(2)}<br>
+                    Total Yearly Cost: $${totalCostPerYear.toFixed(2)}
+                `;
+                
+                document.getElementById('result').innerHTML = resultText;
+            } else {
+                document.getElementById('result').innerHTML = 'Please fill out all fields.';
+            }
+        }
+    </script>
+</body>
+</html>

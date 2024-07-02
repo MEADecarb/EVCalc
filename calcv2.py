@@ -29,7 +29,7 @@ def ev_energy_calculator():
     st.write("How long do you have to charge?")
 
     avg_charge_time_per_ev = energy_needed_per_vehicle / rate_of_charging_per_hour
-    total_charge_time_all_evs = avg_charge_time_per_ev * total_cars_per_day / number_of_stations
+    total_charge_time_all_evs = (total_energy_needed_per_day / capacity_charging_station) / number_of_stations
 
     st.success(f"Hours to charge average per vehicle when needed: {avg_charge_time_per_ev:.2f} hours")
     st.warning("If larger than 5 hours, recommend demand rate calculations")

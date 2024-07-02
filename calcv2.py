@@ -7,7 +7,7 @@ def ev_energy_calculator():
     # Input 1: Vehicle Information
     st.header("Vehicle Information")
     st.write("How many EVs will be needed and how much energy is needed?")
-    
+
     total_cars_per_day = st.number_input("Total # of cars charging per day:", min_value=0, value=5, step=1)
     avg_capacity_ev = st.number_input("Average Capacity of EVs (kW/Hr):", min_value=0.0, value=150.0, step=1.0)
     capacity_charging_station = st.number_input("Capacity of Charging Station (kW):", min_value=0.0, value=50.0, step=1.0)
@@ -20,6 +20,9 @@ def ev_energy_calculator():
     # Calculate energy needed
     energy_needed_per_vehicle = (miles_per_vehicle_per_day / max_mileage_per_vehicle) * avg_capacity_ev
     total_energy_needed_per_day = total_cars_per_day * energy_needed_per_vehicle
+
+    # Visual separator
+    st.markdown("---")
 
     # Input 2: Amount of Hours of Charge Needed
     st.header("Amount of Hours of Charge Needed")

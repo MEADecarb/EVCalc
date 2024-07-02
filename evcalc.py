@@ -1,4 +1,6 @@
 import streamlit as st
+import pandas as pd
+import io
 
 # Define the EV energy calculator function
 def ev_energy_calculator():
@@ -41,6 +43,20 @@ def ev_energy_calculator():
                 st.success(f"Total Annual Cost of Energy: ${total_annual_cost:.2f}")
                 st.success(f"Total Hours to Charge All Vehicles: {total_charge_time_all_evs:.2f} hours")
 
+                # Prepare data for CSV
+                data = {
+                    'Description': ['Max EVs Supported', 'Total Energy Consumption per Year (Peak)', 'Total Energy Consumption per Year (Non-Peak)', 
+                                    'Annual Cost of Energy (Peak)', 'Annual Cost of Energy (Non-Peak)', 'Total Annual Cost of Energy', 'Total Hours to Charge All Vehicles'],
+                    'Value': [max_evs_supported, peak_energy, non_peak_energy, annual_cost_peak, annual_cost_non_peak, total_annual_cost, total_charge_time_all_evs]
+                }
+                df = pd.DataFrame(data)
+                
+                # Convert DataFrame to CSV
+                csv = df.to_csv(index=False)
+                b64 = base64.b64encode(csv.encode()).decode()
+                href = f'<a href="data:file/csv;base64,{b64}" download="ev_energy_calculator_results.csv">Download CSV File</a>'
+                st.markdown(href, unsafe_allow_html=True)
+
             except ValueError:
                 st.error("Please enter valid numbers for all fields.")
 
@@ -76,6 +92,22 @@ def ev_energy_calculator():
                 st.success(f"Annual Cost of Energy (Non-Peak): ${annual_cost_non_peak:.2f}")
                 st.success(f"Total Annual Cost of Energy: ${total_annual_cost:.2f}")
                 st.success(f"Total Hours to Charge All Vehicles: {total_charge_time_all_evs:.2f} hours")
+
+                # Prepare data for CSV
+                data = {
+                    'Description': ['Total Energy Needed per Day', 'Total Energy Needed per Year', 'Total Energy Consumption per Year (Peak)', 
+                                    'Total Energy Consumption per Year (Non-Peak)', 'Annual Cost of Energy (Peak)', 'Annual Cost of Energy (Non-Peak)', 
+                                    'Total Annual Cost of Energy', 'Total Hours to Charge All Vehicles'],
+                    'Value': [energy_needed_per_day, energy_needed_per_year, peak_energy, non_peak_energy, annual_cost_peak, annual_cost_non_peak, 
+                              total_annual_cost, total_charge_time_all_evs]
+                }
+                df = pd.DataFrame(data)
+                
+                # Convert DataFrame to CSV
+                csv = df.to_csv(index=False)
+                b64 = base64.b64encode(csv.encode()).decode()
+                href = f'<a href="data:file/csv;base64,{b64}" download="ev_energy_calculator_results.csv">Download CSV File</a>'
+                st.markdown(href, unsafe_allow_html=True)
 
             except ValueError:
                 st.error("Please enter valid numbers for all fields.")

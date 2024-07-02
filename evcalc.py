@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import io
+import base64
 
 # Define the EV energy calculator function
 def ev_energy_calculator():

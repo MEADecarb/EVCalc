@@ -1,10 +1,14 @@
 import streamlit as st
 import csv
 from datetime import datetime
+import os
 
 # Define the EV energy calculator function
 def ev_energy_calculator():
     st.title("EV Energy Calculator")
+
+    # Input for the user to name their fleet
+    fleet_name = st.text_input("Enter your fleet name:", value="MyFleet")
 
     # Input 1: Vehicle Information
     st.header("Vehicle Information")
@@ -37,30 +41,29 @@ def ev_energy_calculator():
     st.warning("If larger than 5 hours, recommend demand rate calculations")
     st.success(f"Hours to charge all vehicles: {total_charge_time_all_evs:.2f} hours (subtract 8 hours from total)")
 
-    # Dynamic adjustment suggestions
-    st.markdown("### Dynamic Adjustment Suggestions")
-    st.write("Adjust the inputs to see the changes in the suggested values.")
-    
-    st.write(f"Suggested Average Charge Time per Vehicle: {avg_charge_time_per_ev:.2f} hours")
-    st.write(f"Suggested Total Charge Time for All Vehicles: {total_charge_time_all_evs:.2f} hours")
-
-    st.markdown("#### Adjusted Inputs Based on Calculations")
-    adjusted_avg_capacity_ev = (total_energy_needed_per_day / total_cars_per_day) * (max_mileage_per_vehicle / miles_per_vehicle_per_day)
-    adjusted_capacity_charging_station = total_energy_needed_per_day / (total_charge_time_all_evs * number_of_stations)
-    
-    st.write(f"Adjusted Average Capacity of EVs: {adjusted_avg_capacity_ev:.2f} kW/Hr")
-    st.write(f"Adjusted Capacity of Charging Station: {adjusted_capacity_charging_station:.2f} kW")
-    
-    # Button to save inputs
+    # Button to save inputs to CSV
     if st.button("Save Inputs to CSV"):
-        # Create or append to CSV file
-        with open("ev_energy_calculator_log.csv", mode="a", newline="") as file:
+        # Generate a CSV filename with the fleet name and the current timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        csv_file = f"{fleet_name}_{timestamp}_ev_energy_calculator_log.csv"
+
+        # Save inputs to a CSV file
+        with open(csv_file, mode="a", newline="") as file:
             writer = csv.writer(file)
-            writer.writerow([datetime.now(), total_cars_per_day, avg_capacity_ev, capacity_charging_station,
+            writer.writerow([datetime.now(), fleet_name, total_cars_per_day, avg_capacity_ev, capacity_charging_station,
                              rate_of_charging_per_hour, miles_per_vehicle_per_day, max_mileage_per_vehicle,
                              days_of_operation_per_week, number_of_stations, total_energy_needed_per_day, avg_charge_time_per_ev, total_charge_time_all_evs])
         
-        st.success("Inputs have been saved to ev_energy_calculator_log.csv")
+        st.success(f"Inputs have been saved to {csv_file}")
+
+        # Show download button for the CSV file
+        with open(csv_file, "rb") as f:
+            st.download_button(
+                label="Download CSV File",
+                data=f,
+                file_name=csv_file,
+                mime="text/csv"
+            )
 
 # Run the calculator
 if __name__ == '__main__':

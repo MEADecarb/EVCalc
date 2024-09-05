@@ -2,6 +2,19 @@ import streamlit as st
 import csv
 from datetime import datetime
 import os
+import dropbox
+
+# Function to upload file to Dropbox
+def upload_to_dropbox(file_path, destination_path):
+    # Access the Dropbox API key from Streamlit secrets
+    dropbox_access_token = st.secrets["dropbox"]["access_token"]
+    
+    dbx = dropbox.Dropbox(dropbox_access_token)
+    with open(file_path, "rb") as f:
+        dbx.files_upload(f.read(), destination_path, mode=dropbox.files.WriteMode("overwrite"))
+    link = dbx.sharing_create_shared_link(destination_path).url
+    # Modify the link to make it directly downloadable
+    return link.replace("?dl=0", "?dl=1")
 
 # Define the EV energy calculator function
 def ev_energy_calculator():
@@ -48,8 +61,16 @@ def ev_energy_calculator():
         csv_file = f"{fleet_name}_{timestamp}_ev_energy_calculator_log.csv"
 
         # Save inputs to a CSV file
-        with open(csv_file, mode="a", newline="") as file:
+        with open(csv_file, mode="w", newline="") as file:
             writer = csv.writer(file)
+            writer.writerow([
+                "Timestamp", "Fleet Name", "Total Cars Per Day", "Avg Capacity EV", 
+                "Capacity Charging Station", "Rate of Charging Per Hour", 
+                "Miles Per Vehicle Per Day", "Max Mileage Per Vehicle", 
+                "Days of Operation Per Week", "Number of Stations", 
+                "Total Energy Needed Per Day", "Avg Charge Time Per EV", 
+                "Total Charge Time All EVs"
+            ])
             writer.writerow([datetime.now(), fleet_name, total_cars_per_day, avg_capacity_ev, capacity_charging_station,
                              rate_of_charging_per_hour, miles_per_vehicle_per_day, max_mileage_per_vehicle,
                              days_of_operation_per_week, number_of_stations, total_energy_needed_per_day, avg_charge_time_per_ev, total_charge_time_all_evs])
@@ -64,6 +85,11 @@ def ev_energy_calculator():
                 file_name=csv_file,
                 mime="text/csv"
             )
+
+        # Upload the CSV to Dropbox and share the link
+        dropbox_path = f"/{csv_file}"
+        dropbox_link = upload_to_dropbox(csv_file, dropbox_path)
+        st.success(f"CSV file has been uploaded to Dropbox. [Download it here]({dropbox_link})")
 
 # Run the calculator
 if __name__ == '__main__':

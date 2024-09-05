@@ -1,4 +1,6 @@
 import streamlit as st
+import csv
+from datetime import datetime
 
 # Define the EV energy calculator function
 def ev_energy_calculator():
@@ -48,6 +50,17 @@ def ev_energy_calculator():
     
     st.write(f"Adjusted Average Capacity of EVs: {adjusted_avg_capacity_ev:.2f} kW/Hr")
     st.write(f"Adjusted Capacity of Charging Station: {adjusted_capacity_charging_station:.2f} kW")
+    
+    # Button to save inputs
+    if st.button("Save Inputs to CSV"):
+        # Create or append to CSV file
+        with open("ev_energy_calculator_log.csv", mode="a", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow([datetime.now(), total_cars_per_day, avg_capacity_ev, capacity_charging_station,
+                             rate_of_charging_per_hour, miles_per_vehicle_per_day, max_mileage_per_vehicle,
+                             days_of_operation_per_week, number_of_stations, total_energy_needed_per_day, avg_charge_time_per_ev, total_charge_time_all_evs])
+        
+        st.success("Inputs have been saved to ev_energy_calculator_log.csv")
 
 # Run the calculator
 if __name__ == '__main__':

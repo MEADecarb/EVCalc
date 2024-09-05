@@ -41,23 +41,28 @@ def ev_energy_calculator():
   st.success(f"Hours to charge all vehicles: {total_charge_time_all_evs:.2f} hours (subtract 8 hours from total)")
 
   # Button to download CSV
-  if st.button("Download Results as CSV"):
+  if st.button("Download Results and Inputs as CSV"):
       # Generate CSV data
       csv_data = io.StringIO()
       writer = csv.writer(csv_data)
       writer.writerow([
-          "Timestamp", "Fleet Name", "Total Cars Per Day", "Avg Capacity EV", 
-          "Capacity Charging Station", "Rate of Charging Per Hour", 
-          "Miles Per Vehicle Per Day", "Max Mileage Per Vehicle", 
-          "Days of Operation Per Week", "Number of Stations", 
-          "Total Energy Needed Per Day", "Avg Charge Time Per EV", 
-          "Total Charge Time All EVs"
+          "Category", "Value"
       ])
-      writer.writerow([
-          datetime.now(), fleet_name, total_cars_per_day, avg_capacity_ev, capacity_charging_station,
-          rate_of_charging_per_hour, miles_per_vehicle_per_day, max_mileage_per_vehicle,
-          days_of_operation_per_week, number_of_stations, total_energy_needed_per_day, 
-          avg_charge_time_per_ev, total_charge_time_all_evs
+      writer.writerows([
+          ["Timestamp", datetime.now()],
+          ["Fleet Name", fleet_name],
+          ["Total Cars Per Day", total_cars_per_day],
+          ["Avg Capacity EV (kWh)", avg_capacity_ev],
+          ["Capacity Charging Station (kW)", capacity_charging_station],
+          ["Rate of Charging Per Hour (kW)", rate_of_charging_per_hour],
+          ["Miles Per Vehicle Per Day", miles_per_vehicle_per_day],
+          ["Max Mileage Per Vehicle", max_mileage_per_vehicle],
+          ["Days of Operation Per Week", days_of_operation_per_week],
+          ["Number of Stations", number_of_stations],
+          ["Energy Needed Per Vehicle (kWh)", energy_needed_per_vehicle],
+          ["Total Energy Needed Per Day (kWh)", total_energy_needed_per_day],
+          ["Avg Charge Time Per EV (hours)", avg_charge_time_per_ev],
+          ["Total Charge Time All EVs (hours)", total_charge_time_all_evs]
       ])
       
       # Generate filename

@@ -1,63 +1,10 @@
 import streamlit as st
 import csv
 from datetime import datetime
-import os
-import dropbox
-from dropbox import DropboxOAuth2Flow
-
-# Retrieve Dropbox App key and secret from Streamlit secrets
-APP_KEY = st.secrets["dropbox"]["app_key"]
-APP_SECRET = st.secrets["dropbox"]["app_secret"]
-REDIRECT_URI = "https://calcv2.streamlit.app/"
-
-# Streamlit state management for OAuth flow
-if 'access_token' not in st.session_state:
-  st.session_state.access_token = None
-
-def dropbox_oauth_flow():
-  if st.session_state.access_token is None:
-      if 'oauth_result' not in st.session_state:
-          auth_flow = DropboxOAuth2Flow(
-              APP_KEY,
-              APP_SECRET,
-              REDIRECT_URI,
-              st.session_state,
-              "dropbox-auth-csrf-token"
-          )
-          auth_url = auth_flow.start()
-          st.markdown(f"[Authorize the app]({auth_url})")
-          st.write("After authorization, you'll be redirected back to this app.")
-      else:
-          st.session_state.access_token = st.session_state.oauth_result.access_token
-          st.success("Successfully authenticated with Dropbox!")
-          del st.session_state.oauth_result
-  else:
-      st.success("Already authenticated with Dropbox.")
-
-def upload_to_dropbox(file_path, destination_path):
-  if st.session_state.access_token is None:
-      st.error("Not authenticated with Dropbox. Please complete the OAuth flow first.")
-      return None
-  
-  try:
-      with dropbox.Dropbox(st.session_state.access_token) as dbx:
-          with open(file_path, "rb") as f:
-              dbx.files_upload(f.read(), destination_path, mode=dropbox.files.WriteMode("overwrite"))
-          shared_link = dbx.sharing_create_shared_link(destination_path)
-          return shared_link.url.replace("?dl=0", "?dl=1")
-  except dropbox.exceptions.AuthError:
-      st.error("Authentication token is invalid. Please re-authenticate.")
-      st.session_state.access_token = None
-      return None
-  except Exception as e:
-      st.error(f"Error uploading to Dropbox: {str(e)}")
-      return None
+import io
 
 def ev_energy_calculator():
   st.title("EV Energy Calculator")
-
-  # Run OAuth flow
-  dropbox_oauth_flow()
 
   # Input for the user to name their fleet
   fleet_name = st.text_input("Enter your fleet name:", value="MyFleet")
@@ -93,59 +40,37 @@ def ev_energy_calculator():
   st.warning("If larger than 5 hours, recommend demand rate calculations")
   st.success(f"Hours to charge all vehicles: {total_charge_time_all_evs:.2f} hours (subtract 8 hours from total)")
 
-  # Button to save inputs to CSV and upload to Dropbox
-  if st.button("Save Inputs to CSV and Upload to Dropbox"):
-      # Generate a CSV filename with the fleet name and the current timestamp
-      timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-      csv_file = f"{fleet_name}_{timestamp}_ev_energy_calculator_log.csv"
-
-      # Save inputs to a CSV file
-      with open(csv_file, mode="w", newline="") as file:
-          writer = csv.writer(file)
-          writer.writerow([
-              "Timestamp", "Fleet Name", "Total Cars Per Day", "Avg Capacity EV", 
-              "Capacity Charging Station", "Rate of Charging Per Hour", 
-              "Miles Per Vehicle Per Day", "Max Mileage Per Vehicle", 
-              "Days of Operation Per Week", "Number of Stations", 
-              "Total Energy Needed Per Day", "Avg Charge Time Per EV", 
-              "Total Charge Time All EVs"
-          ])
-          writer.writerow([datetime.now(), fleet_name, total_cars_per_day, avg_capacity_ev, capacity_charging_station,
-                           rate_of_charging_per_hour, miles_per_vehicle_per_day, max_mileage_per_vehicle,
-                           days_of_operation_per_week, number_of_stations, total_energy_needed_per_day, avg_charge_time_per_ev, total_charge_time_all_evs])
+  # Button to download CSV
+  if st.button("Download Results as CSV"):
+      # Generate CSV data
+      csv_data = io.StringIO()
+      writer = csv.writer(csv_data)
+      writer.writerow([
+          "Timestamp", "Fleet Name", "Total Cars Per Day", "Avg Capacity EV", 
+          "Capacity Charging Station", "Rate of Charging Per Hour", 
+          "Miles Per Vehicle Per Day", "Max Mileage Per Vehicle", 
+          "Days of Operation Per Week", "Number of Stations", 
+          "Total Energy Needed Per Day", "Avg Charge Time Per EV", 
+          "Total Charge Time All EVs"
+      ])
+      writer.writerow([
+          datetime.now(), fleet_name, total_cars_per_day, avg_capacity_ev, capacity_charging_station,
+          rate_of_charging_per_hour, miles_per_vehicle_per_day, max_mileage_per_vehicle,
+          days_of_operation_per_week, number_of_stations, total_energy_needed_per_day, 
+          avg_charge_time_per_ev, total_charge_time_all_evs
+      ])
       
-      st.success(f"Inputs have been saved to {csv_file}")
+      # Generate filename
+      timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+      csv_filename = f"{fleet_name}_{timestamp}_ev_energy_calculator_log.csv"
 
-      # Show download button for the CSV file
-      with open(csv_file, "rb") as f:
-          st.download_button(
-              label="Download CSV File",
-              data=f,
-              file_name=csv_file,
-              mime="text/csv"
-          )
-
-      # Upload the CSV to Dropbox and share the link
-      dropbox_path = f"/{csv_file}"
-      dropbox_link = upload_to_dropbox(csv_file, dropbox_path)
-      if dropbox_link:
-          st.success(f"CSV file has been uploaded to Dropbox. [Download it here]({dropbox_link})")
-      else:
-          st.error("Failed to upload the file to Dropbox. Please check the authentication and try again.")
-
-# Handle OAuth 2 redirect
-if 'code' in st.experimental_get_query_params():
-  auth_flow = DropboxOAuth2Flow(
-      APP_KEY,
-      APP_SECRET,
-      REDIRECT_URI,
-      st.session_state,
-      "dropbox-auth-csrf-token"
-  )
-  try:
-      st.session_state.oauth_result = auth_flow.finish(st.experimental_get_query_params())
-  except Exception as e:
-      st.error(f"Error finishing OAuth flow: {str(e)}")
+      # Offer CSV download
+      st.download_button(
+          label="Download CSV File",
+          data=csv_data.getvalue(),
+          file_name=csv_filename,
+          mime="text/csv"
+      )
 
 # Run the calculator
 if __name__ == '__main__':

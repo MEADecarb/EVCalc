@@ -3,18 +3,34 @@ import csv
 from datetime import datetime
 import os
 import dropbox
+from dropbox.exceptions import AuthError, ApiError
 
 # Function to upload file to Dropbox
 def upload_to_dropbox(file_path, destination_path):
-  # Access the Dropbox API key from Streamlit secrets
-  dropbox_access_token = st.secrets["dropbox"]["access_token"]
+  try:
+      # Access the Dropbox API key from Streamlit secrets
+      dropbox_access_token = st.secrets["dropbox"]["access_token"]
+      
+      dbx = dropbox.Dropbox(dropbox_access_token)
+      
+      # Check if the access token is valid
+      dbx.users_get_current_account()
+      
+      with open(file_path, "rb") as f:
+          dbx.files_upload(f.read(), destination_path, mode=dropbox.files.WriteMode("overwrite"))
+      
+      link = dbx.sharing_create_shared_link(destination_path).url
+      # Modify the link to make it directly downloadable
+      return link.replace("?dl=0", "?dl=1")
   
-  dbx = dropbox.Dropbox(dropbox_access_token)
-  with open(file_path, "rb") as f:
-      dbx.files_upload(f.read(), destination_path, mode=dropbox.files.WriteMode("overwrite"))
-  link = dbx.sharing_create_shared_link(destination_path).url
-  # Modify the link to make it directly downloadable
-  return link.replace("?dl=0", "?dl=1")
+  except AuthError as e:
+      st.error(f"Error authenticating with Dropbox: {str(e)}")
+  except ApiError as e:
+      st.error(f"Error uploading to Dropbox: {str(e)}")
+  except Exception as e:
+      st.error(f"An unexpected error occurred: {str(e)}")
+  
+  return None
 
 # Define the EV energy calculator function
 def ev_energy_calculator():
@@ -89,7 +105,10 @@ def ev_energy_calculator():
       # Upload the CSV to Dropbox and share the link
       dropbox_path = f"/{csv_file}"
       dropbox_link = upload_to_dropbox(csv_file, dropbox_path)
-      st.success(f"CSV file has been uploaded to Dropbox. [Download it here]({dropbox_link})")
+      if dropbox_link:
+          st.success(f"CSV file has been uploaded to Dropbox. [Download it here]({dropbox_link})")
+      else:
+          st.error("Failed to upload the file to Dropbox. Please check your Dropbox settings and try again.")
 
 # Run the calculator
 if __name__ == '__main__':
